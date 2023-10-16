@@ -101,6 +101,16 @@ impl<T> Kurve<T> {
 
         return node;
     }
+
+    /// Djikstra pathing algorithm 
+    pub fn djikstra(&self, from: usize, to: usize) -> Option<Vec<usize>> {
+        return None;
+    }
+
+    /// A* pathing algorithm
+    pub fn a_star(&self, from: usize, to: usize) -> Option<Vec<usize>> {
+        return None;
+    }
 }
 
 #[cfg(test)]
@@ -253,8 +263,10 @@ mod tests {
         k.add_twoway_edge(0, 2);
         k.add_edge(1, 2);
 
+        assert!(k.size() == 3);
         let n = k.remove(0);
         assert!(n.is_some());
+        assert!(k.size() == 2);
 
         let n = n.unwrap();
         let node_ref = n.borrow();

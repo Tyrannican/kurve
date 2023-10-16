@@ -7,7 +7,6 @@ type Node<T> = Rc<RefCell<Vertex<T>>>;
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct Vertex<T> {
     pub id: usize,
-    pub weight: usize,
     pub value: T,
 }
 

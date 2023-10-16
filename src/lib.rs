@@ -13,12 +13,7 @@ pub struct Vertex<T> {
 
 impl<T> Vertex<T> {
     pub fn new(id: usize, value: T) -> Self {
-        Self { id, value, weight: 1 }
-    }
-
-    pub fn with_weight(mut self, weight: usize) -> Self {
-        self.weight = weight;
-        return self;
+        Self { id, value }
     }
 }
 

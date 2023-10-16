@@ -111,6 +111,16 @@ impl<T> Kurve<T> {
     pub fn a_star(&self, from: usize, to: usize) -> Option<Vec<usize>> {
         return None;
     }
+
+    /// Depth-First Search
+    pub fn dfs(&self, from: usize, to: usize) -> Option<Vec<usize>> {
+        return None;
+    }
+
+    /// Breadth-First Search
+    pub fn bfs(&self, from: usize, to: usize) -> Option<Vec<usize>> {
+        return None;
+    }
 }
 
 #[cfg(test)]

@@ -1,3 +1,5 @@
+mod queue;
+
 use std::hash::Hash;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -10,10 +12,7 @@ type Node<K, T> = Rc<RefCell<Vertex<K, T>>>;
 type Edge<K> = (K, usize);
 
 #[derive(PartialEq, Eq, Hash, Clone)]
-pub struct Vertex<K, T> 
-where
-    K: PartialEq + Eq + Hash + Clone
-{
+pub struct Vertex<K, T> {
     pub id: K,
     pub value: T,
 }
@@ -27,10 +26,7 @@ where
     }
 }
 
-pub struct Kurve<K, T>
-where
-    K: PartialEq + Eq + Hash + Clone
-{
+pub struct Kurve<K, T> {
     nodes: HashMap<K, Node<K, T>>,
     adj_list: HashMap<K, HashMap<K, usize>>,
 }
@@ -121,22 +117,12 @@ where
     }
 
     /// Djikstra pathing algorithm 
-    pub fn djikstra(&self, from: usize, to: usize) -> Option<Vec<usize>> {
+    pub fn djikstra(&self, from: K, to: K) -> Option<Vec<K>> {
         return None;
     }
 
     /// A* pathing algorithm
     pub fn a_star(&self, from: usize, to: usize) -> Option<Vec<usize>> {
-        return None;
-    }
-
-    /// Depth-First Search
-    pub fn dfs(&self, from: usize, to: usize) -> Option<Vec<usize>> {
-        return None;
-    }
-
-    /// Breadth-First Search
-    pub fn bfs(&self, from: usize, to: usize) -> Option<Vec<usize>> {
         return None;
     }
 }

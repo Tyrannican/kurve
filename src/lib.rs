@@ -1,6 +1,9 @@
 mod queue;
 
+use queue::MinDistanceQueue;
+
 use std::hash::Hash;
+use std::cmp::Ord;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
@@ -19,7 +22,7 @@ pub struct Vertex<K, T> {
 
 impl<K, T> Vertex<K, T>
 where
-    K: PartialEq + Eq + Hash + Clone
+    K: PartialEq + Eq + Hash + Clone + Ord
 {
     pub fn new(id: K, value: T) -> Self {
         Self { id, value }
@@ -33,7 +36,7 @@ pub struct Kurve<K, T> {
 
 impl<K, T> Kurve<K, T>
 where
-    K: PartialEq + Eq + Hash + Clone
+    K: PartialEq + Eq + Hash + Clone + Ord
 {
     /// Creates a new Graph
     pub fn new() -> Self {
@@ -118,6 +121,53 @@ where
 
     /// Djikstra pathing algorithm 
     pub fn djikstra(&self, from: K, to: K) -> Option<Vec<K>> {
+        let mut distances = HashMap::new();
+        let mut predecessors = HashMap::new();
+        let mut visited = HashSet::new();
+        let mut queue: MinDistanceQueue<K> = MinDistanceQueue::new();
+
+        queue.push(from.clone(), 0);
+
+        for v in self.adj_list.keys() {
+            distances.insert(v, usize::MAX);
+            predecessors.insert(v, None);
+        }
+
+        distances.insert(&from, 0);
+
+        while let Some(node) = queue.pop() {
+            if node == to {
+                let mut path = vec![to.clone()];
+
+                let mut curr = to.clone();
+                while predecessors[&curr] != Some(from.clone()) {
+                    if let Some(prev) = &predecessors[&curr] {
+                        path.push(prev.clone());
+                        curr = prev.clone();
+                    }
+                }
+
+                path.push(from.clone());
+                path.reverse();
+
+                return Some(path);
+            }
+
+            visited.insert(node.clone());
+
+            if let Some(edges) = self.adj_list.get(&node) {
+                for (neighbor, weight) in edges {
+                    let new_dist = distances[&node] + *weight;
+
+                    if !visited.contains(neighbor) && new_dist < distances[neighbor] {
+                        distances.insert(neighbor, new_dist);
+                        predecessors.insert(neighbor, Some(node.clone()));
+                        queue.push(neighbor.clone(), new_dist);
+                    }
+                }
+            }
+        }
+
         return None;
     }
 
@@ -320,5 +370,51 @@ mod tests {
         check = adj_list.get(&2).unwrap();
         assert!(!check.contains_key(&0));
         assert!(!check.contains_key(&1));
+    }
+
+    #[test]
+    fn djikstra_weighted() {
+        let mut k: Kurve<String, i32> = Kurve::new();
+        let to_name = |i| format!("node{i}");
+        for i in 1..=5 {
+            k.add_node(to_name(i), i * 100)
+        }
+
+
+        k.add_weighted_edge(to_name(1), to_name(5), 1);
+        k.add_weighted_edge(to_name(1), to_name(4), 6);
+        k.add_weighted_edge(to_name(1), to_name(3), 4);
+        k.add_weighted_edge(to_name(1), to_name(2), 7);
+        k.add_weighted_edge(to_name(5), to_name(4), 1);
+        k.add_weighted_edge(to_name(4), to_name(2), 3);
+        k.add_weighted_edge(to_name(3), to_name(2), 2);
+        k.add_weighted_edge(to_name(3), to_name(4), 5);
+
+        let path = k.djikstra(to_name(1), to_name(2));
+        assert!(path.is_some());
+        assert!(path == Some(vec![to_name(1), to_name(5), to_name(4), to_name(2)]));
+    }
+
+    #[test]
+    fn djikstra_unweighted() {
+        let mut k: Kurve<String, i32> = Kurve::new();
+        let to_name = |i| format!("node{i}");
+        for i in 1..=5 {
+            k.add_node(to_name(i), i * 100)
+        }
+
+
+        k.add_edge(to_name(1), to_name(5));
+        k.add_edge(to_name(1), to_name(4));
+        k.add_edge(to_name(1), to_name(3));
+        k.add_edge(to_name(1), to_name(2));
+        k.add_edge(to_name(5), to_name(4));
+        k.add_edge(to_name(4), to_name(2));
+        k.add_edge(to_name(3), to_name(2));
+        k.add_edge(to_name(3), to_name(4));
+
+        let path = k.djikstra(to_name(1), to_name(2));
+        assert!(path.is_some());
+        assert!(path == Some(vec![to_name(1), to_name(2)]));
     }
 }

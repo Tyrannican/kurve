@@ -85,7 +85,7 @@ where
     }
 
     /// Gets the assocaited neighbors for a given node
-    pub fn get_neighbors(&self, node_id: K) -> Option<HashSet<Edge<K>>> {
+    pub fn get_neighbors(&self, node_id: K) -> Option<HashMap<K, usize>> {
         if let Some(neighbors) = self.adj_list.get(&node_id) {
             return Some(neighbors.clone());
         }
@@ -94,7 +94,7 @@ where
     }
 
     /// Gets a copy of the Adj list
-    pub fn get_all_neighbors(&self) -> HashMap<K, HashSet<Edge<K>>> {
+    pub fn get_all_neighbors(&self) -> HashMap<K, HashMap<K, usize>> {
         return self.adj_list.clone();
     }
 
@@ -111,16 +111,7 @@ where
                     }
 
                     let target_neighbors = target_neighbors.unwrap();
-                    let to_remove = target_neighbors.clone().into_iter()
-                        .filter(|n| {
-                            let (target_id, _) = n;
-                            *target_id == id
-                        })
-                        .collect::<HashSet<Edge<K>>>();
-                    
-                    for edge in to_remove.iter() {
-                        target_neighbors.remove(edge);
-                    }
+                    target_neighbors.remove(&id);
                 }
             }
             None => {}
@@ -154,185 +145,194 @@ where
 mod tests {
     use super::*;
 
-    // #[test]
-    // fn adds_single_node() {
-    //     let mut k: Kurve<String, i32> = Kurve::new();
-    //     k.add_node("node1".to_string(), 100);
+    #[test]
+    fn adds_single_node() {
+        let mut k: Kurve<String, i32> = Kurve::new();
+        k.add_node("node1".to_string(), 100);
 
-    //     assert!(k.size() == 1);
-    // }
+        assert!(k.size() == 1);
+    }
 
-    // #[test]
-    // fn adds_a_bunch_of_nodes() {
-    //     let mut k: Kurve<i32, i32> = Kurve::new();
-    //     for i in 1..=100 {
-    //         k.add_node(i, i as i32 * 20);
-    //         assert!(k.adj_list.contains_key(&i));
-    //     }
+    #[test]
+    fn adds_a_bunch_of_nodes() {
+        let mut k: Kurve<i32, i32> = Kurve::new();
+        for i in 1..=100 {
+            k.add_node(i, i as i32 * 20);
+            assert!(k.adj_list.contains_key(&i));
+        }
 
-    //     assert!(k.nodes.len() == 100);
-    // }
+        assert!(k.nodes.len() == 100);
+    }
 
-    // #[test]
-    // fn adds_an_edge() {
-    //     let mut k: Kurve<i32, i32> = Kurve::new();
+    #[test]
+    fn adds_an_edge() {
+        let mut k: Kurve<i32, i32> = Kurve::new();
 
-    //     k.add_node(0, 100);
-    //     k.add_node(1, 200);
-    //     k.add_node(2, 300);
+        k.add_node(0, 100);
+        k.add_node(1, 200);
+        k.add_node(2, 300);
 
-    //     k.add_edge(0, 1);
-    //     k.add_edge(0, 2);
-    //     k.add_edge(1, 2);
+        k.add_edge(0, 1);
+        k.add_edge(0, 2);
+        k.add_edge(1, 2);
 
-    //     let n = k.get_all_neighbors();
+        let n = k.get_all_neighbors();
 
-    //     assert!(n.get(&0).unwrap().contains(&(1, 1)));
-    //     assert!(n.get(&0).unwrap().contains(&(2, 1)));
-    //     assert!(n.get(&1).unwrap().contains(&(2, 1)));
+        assert!(n[&0].contains_key(&1));
+        assert!(n[&0].contains_key(&1));
+        assert!(n[&1].contains_key(&2));
 
-    //     assert!(!n.get(&2).unwrap().contains(&(0, 1)));
-    //     assert!(!n.get(&2).unwrap().contains(&(1, 1)));
-    // }
+        assert!(!n[&2].contains_key(&0));
+        assert!(!n[&2].contains_key(&1));
+    }
 
-    // #[test]
-    // fn adds_a_weighted_edge() {
-    //     let mut k: Kurve<i32, i32> = Kurve::new();
+    #[test]
+    fn adds_a_weighted_edge() {
+        let mut k: Kurve<i32, i32> = Kurve::new();
 
-    //     k.add_node(0, 100);
-    //     k.add_node(1, 200);
-    //     k.add_node(2, 300);
+        k.add_node(0, 100);
+        k.add_node(1, 200);
+        k.add_node(2, 300);
 
-    //     k.add_weighted_edge(0, 1, 2);
-    //     k.add_weighted_edge(0, 2, 3);
-    //     k.add_weighted_edge(2, 1, 4);
+        k.add_weighted_edge(0, 1, 2);
+        k.add_weighted_edge(0, 2, 3);
+        k.add_weighted_edge(2, 1, 4);
 
-    //     let n = k.get_all_neighbors();
+        let n = k.get_all_neighbors();
 
-    //     assert!(n.get(&0).unwrap().contains(&(1, 2)));
-    //     assert!(n.get(&0).unwrap().contains(&(2, 3)));
-    //     assert!(n.get(&2).unwrap().contains(&(1, 4)));
-    // }
+        let mut check = &n[&0];
+        assert!(check[&1] == 2);
+        assert!(check[&2] == 3);
 
-    // #[test]
-    // fn gets_a_node() {
-    //     let mut k: Kurve<i32, i32> = Kurve::new();
-    //     k.add_node(1, 1000);
+        check = &n[&2];
+        assert!(check[&1] == 4);
+    }
 
-    //     let result = k.get(1);
-    //     assert!(result.is_some());
+    #[test]
+    fn gets_a_node() {
+        let mut k: Kurve<i32, i32> = Kurve::new();
+        k.add_node(1, 1000);
 
-    //     let inner = result.unwrap();
-    //     let node_ref = inner.borrow();
+        let result = k.get(1);
+        assert!(result.is_some());
 
-    //     assert!(node_ref.id == 1);
-    //     assert!(node_ref.value == 1000);
-    // }
+        let inner = result.unwrap();
+        let node_ref = inner.borrow();
 
-    // #[test]
-    // fn get_a_string_id_node() {
-    //     let mut k: Kurve<String, i32> = Kurve::new();
-    //     k.add_node("node1".to_string(), 1000);
+        assert!(node_ref.id == 1);
+        assert!(node_ref.value == 1000);
+    }
 
-    //     let result = k.get("node1".to_string());
-    //     assert!(result.is_some());
+    #[test]
+    fn get_a_string_id_node() {
+        let mut k: Kurve<String, i32> = Kurve::new();
+        k.add_node("node1".to_string(), 1000);
 
-    //     let inner = result.unwrap();
-    //     let node_ref = inner.borrow();
+        let result = k.get("node1".to_string());
+        assert!(result.is_some());
 
-    //     assert!(node_ref.id == "node1".to_string());
-    //     assert!(node_ref.value == 1000);
-    // }
+        let inner = result.unwrap();
+        let node_ref = inner.borrow();
 
-    // #[test]
-    // fn gets_neighbors_for_a_node() {
-    //     let mut k: Kurve<i32, i32> = Kurve::new();
+        assert!(node_ref.id == "node1".to_string());
+        assert!(node_ref.value == 1000);
+    }
 
-    //     k.add_node(0, 100);
-    //     k.add_node(1, 200);
-    //     k.add_node(2, 300);
+    #[test]
+    fn gets_neighbors_for_a_node() {
+        let mut k: Kurve<i32, i32> = Kurve::new();
 
-    //     k.add_edge(0, 1);
-    //     k.add_edge(0, 2);
-    //     k.add_edge(1, 2);
+        k.add_node(0, 100);
+        k.add_node(1, 200);
+        k.add_node(2, 300);
 
-    //     let mut n = k.get_neighbors(0);
-    //     assert!(n.is_some());
-    //     let mut inner = n.unwrap().iter().cloned().collect::<Vec<Edge<i32>>>();
-    //     inner.sort();
-    //     assert_eq!(inner, vec![(1, 1), (2, 1)]);
+        k.add_edge(0, 1);
+        k.add_edge(0, 2);
+        k.add_edge(1, 2);
 
-    //     n = k.get_neighbors(1);
-    //     assert!(n.is_some());
-    //     inner = n.unwrap().iter().cloned().collect::<Vec<Edge<i32>>>();
-    //     inner.sort();
-    //     assert_eq!(inner, vec![(2, 1)]);
+        let mut n = k.get_neighbors(0);
+        assert!(n.is_some());
+        let mut inner = n.unwrap().keys().cloned().collect::<Vec<i32>>();
+        inner.sort();
+        assert_eq!(inner, vec![1, 2]);
 
-    //     n = k.get_neighbors(2);
-    //     assert!(n.is_some());
-    //     assert!(n.unwrap().len() == 0);
-    // }
+        n = k.get_neighbors(1);
+        assert!(n.is_some());
+        inner = n.unwrap().keys().cloned().collect::<Vec<i32>>();
+        inner.sort();
+        assert_eq!(inner, vec![2]);
 
-    // #[test]
-    // fn gets_neighbors_for_a_node_weighted() {
-    //     let mut k: Kurve<i32, i32> = Kurve::new();
+        n = k.get_neighbors(2);
+        assert!(n.is_some());
+        assert!(n.unwrap().len() == 0);
+    }
 
-    //     k.add_node(0, 100);
-    //     k.add_node(1, 200);
-    //     k.add_node(2, 300);
+    #[test]
+    fn gets_neighbors_for_a_node_weighted() {
+        let mut k: Kurve<i32, i32> = Kurve::new();
 
-    //     k.add_weighted_edge(0, 1, 2);
-    //     k.add_weighted_edge(0, 2, 3);
-    //     k.add_weighted_edge(1, 2, 4);
+        k.add_node(0, 100);
+        k.add_node(1, 200);
+        k.add_node(2, 300);
 
-    //     let mut n = k.get_neighbors(0);
-    //     assert!(n.is_some());
-    //     let mut inner = n.unwrap().iter().cloned().collect::<Vec<Edge<i32>>>();
-    //     inner.sort();
-    //     assert_eq!(inner, vec![(1, 2), (2, 3)]);
+        k.add_weighted_edge(0, 1, 2);
+        k.add_weighted_edge(0, 2, 3);
+        k.add_weighted_edge(1, 2, 4);
 
-    //     n = k.get_neighbors(1);
-    //     assert!(n.is_some());
-    //     inner = n.unwrap().iter().cloned().collect::<Vec<Edge<i32>>>();
-    //     inner.sort();
-    //     assert_eq!(inner, vec![(2, 4)]);
+        let mut n = k.get_neighbors(0);
+        assert!(n.is_some());
+        let mut inner = n.unwrap()
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .collect::<Vec<Edge<i32>>>();
+        inner.sort_by_key(|k| k.0);
+        assert_eq!(inner, vec![(1, 2), (2, 3)]);
 
-    //     n = k.get_neighbors(2);
-    //     assert!(n.is_some());
-    //     assert!(n.unwrap().len() == 0);
-    // }
+        n = k.get_neighbors(1);
+        assert!(n.is_some());
+        inner = n.unwrap()
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .collect::<Vec<Edge<i32>>>();
+        inner.sort_by_key(|k| k.0);
+        assert_eq!(inner, vec![(2, 4)]);
 
-    // #[test]
-    // fn removes_a_node() {
-    //     let mut k: Kurve<i32, i32> = Kurve::new();
+        n = k.get_neighbors(2);
+        assert!(n.is_some());
+        assert!(n.unwrap().len() == 0);
+    }
 
-    //     k.add_node(0, 100);
-    //     k.add_node(1, 200);
-    //     k.add_node(2, 300);
+    #[test]
+    fn removes_a_node() {
+        let mut k: Kurve<i32, i32> = Kurve::new();
 
-    //     k.add_edge(0, 1);
-    //     k.add_edge(0, 2);
-    //     k.add_edge(1, 2);
+        k.add_node(0, 100);
+        k.add_node(1, 200);
+        k.add_node(2, 300);
 
-    //     assert!(k.size() == 3);
-    //     let n = k.remove(0);
-    //     assert!(n.is_some());
-    //     assert!(k.size() == 2);
+        k.add_edge(0, 1);
+        k.add_edge(0, 2);
+        k.add_edge(1, 2);
 
-    //     let n = n.unwrap();
-    //     let node_ref = n.borrow();
-    //     assert!(node_ref.id == 0);
-    //     assert!(node_ref.value == 100);
+        assert!(k.size() == 3);
+        let n = k.remove(0);
+        assert!(n.is_some());
+        assert!(k.size() == 2);
 
-    //     let adj_list = k.get_all_neighbors();
-    //     assert!(!adj_list.contains_key(&0));
+        let n = n.unwrap();
+        let node_ref = n.borrow();
+        assert!(node_ref.id == 0);
+        assert!(node_ref.value == 100);
 
-    //     let mut check = adj_list.get(&1).unwrap();
-    //     assert!(!check.contains(&(0, 1)));
-    //     assert!(check.contains(&(2, 1)));
+        let adj_list = k.get_all_neighbors();
+        assert!(!adj_list.contains_key(&0));
 
-    //     check = adj_list.get(&2).unwrap();
-    //     assert!(!check.contains(&(0, 1)));
-    //     assert!(!check.contains(&(1, 1)));
-    // }
+        let mut check = &adj_list[&1];
+        assert!(!check.contains_key(&0));
+        assert!(check.contains_key(&2));
+
+        check = adj_list.get(&2).unwrap();
+        assert!(!check.contains_key(&0));
+        assert!(!check.contains_key(&1));
+    }
 }

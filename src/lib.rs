@@ -5,7 +5,7 @@ use queue::MinDistanceQueue;
 use std::hash::Hash;
 use std::cmp::Ord;
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, BinaryHeap};
 use std::rc::Rc;
 
 /// Vertex on the Graph
@@ -120,7 +120,7 @@ where
     }
 
     /// Djikstra pathing algorithm 
-    pub fn djikstra(&self, from: K, to: K) -> Option<Vec<K>> {
+    pub fn dijkstra(&self, from: K, to: K) -> Option<Vec<K>> {
         let mut distances = HashMap::new();
         let mut predecessors = HashMap::new();
         let mut visited = HashSet::new();
@@ -170,15 +170,10 @@ where
 
         return None;
     }
-
-    /// A* pathing algorithm
-    pub fn a_star(&self, from: usize, to: usize) -> Option<Vec<usize>> {
-        return None;
-    }
 }
 
 #[cfg(test)]
-mod tests {
+mod kurve_tests {
     use super::*;
 
     #[test]
@@ -373,7 +368,7 @@ mod tests {
     }
 
     #[test]
-    fn djikstra_weighted() {
+    fn dijkstra_weighted() {
         let mut k: Kurve<String, i32> = Kurve::new();
         let to_name = |i| format!("node{i}");
         for i in 1..=5 {
@@ -390,13 +385,13 @@ mod tests {
         k.add_weighted_edge(to_name(3), to_name(2), 2);
         k.add_weighted_edge(to_name(3), to_name(4), 5);
 
-        let path = k.djikstra(to_name(1), to_name(2));
+        let path = k.dijkstra(to_name(1), to_name(2));
         assert!(path.is_some());
         assert!(path == Some(vec![to_name(1), to_name(5), to_name(4), to_name(2)]));
     }
 
     #[test]
-    fn djikstra_unweighted() {
+    fn dijkstra_unweighted() {
         let mut k: Kurve<String, i32> = Kurve::new();
         let to_name = |i| format!("node{i}");
         for i in 1..=5 {
@@ -413,7 +408,7 @@ mod tests {
         k.add_edge(to_name(3), to_name(2));
         k.add_edge(to_name(3), to_name(4));
 
-        let path = k.djikstra(to_name(1), to_name(2));
+        let path = k.dijkstra(to_name(1), to_name(2));
         assert!(path.is_some());
         assert!(path == Some(vec![to_name(1), to_name(2)]));
     }

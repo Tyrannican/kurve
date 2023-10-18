@@ -73,9 +73,9 @@ where
     ///
     /// let mut k: Kurve<i32, i32> = Kurve::new();
     ///
-    /// k.add_node(1, 1);
+    /// k.add_vertex(1, 1);
     /// ```
-    pub fn add_node(&mut self, id: K, value: T) {
+    pub fn add_vertex(&mut self, id: K, value: T) {
         let node = Rc::new(RefCell::new(Vertex::new(id.clone(), value)));
         self.nodes.insert(id.clone(), Rc::clone(&node));
         self.adj_list.insert(id, HashMap::new());
@@ -91,8 +91,8 @@ where
     /// use kurve::Kurve;
     ///
     /// let mut k: Kurve<i32, i32> = Kurve::new();
-    /// k.add_node(1, 10);
-    /// k.add_node(2, 40);
+    /// k.add_vertex(1, 10);
+    /// k.add_vertex(2, 40);
     ///
     /// k.add_edge(1, 2);
     /// ```
@@ -111,8 +111,8 @@ where
     ///
     /// let mut k: Kurve<i32, i32> = Kurve::new();
     ///
-    /// k.add_node(1, 10);
-    /// k.add_node(2, 40);
+    /// k.add_vertex(1, 10);
+    /// k.add_vertex(2, 40);
     ///
     /// k.add_weighted_edge(1, 2, 30);
     /// ```
@@ -133,7 +133,7 @@ where
     ///
     /// let mut k: Kurve<i32, i32> = Kurve::new();
     ///
-    /// k.add_node(1, 100);
+    /// k.add_vertex(1, 100);
     /// let node = k.get(1);
     ///
     /// assert!(node.is_some());
@@ -161,9 +161,9 @@ where
     ///
     /// let mut k: Kurve<i32, i32> = Kurve::new();
     ///
-    /// k.add_node(1, 10);
-    /// k.add_node(2, 20);
-    /// k.add_node(3, 30);
+    /// k.add_vertex(1, 10);
+    /// k.add_vertex(2, 20);
+    /// k.add_vertex(3, 30);
     ///
     /// k.add_edge(1, 2);
     /// k.add_edge(1, 3);
@@ -192,8 +192,8 @@ where
     ///
     /// let mut k: Kurve<i32, i32> = Kurve::new();
     ///
-    /// k.add_node(1, 10);
-    /// k.add_node(2, 20);
+    /// k.add_vertex(1, 10);
+    /// k.add_vertex(2, 20);
     ///
     /// let neighbors = k.get_all_neighbors();
     /// assert!(neighbors.contains_key(&1));
@@ -214,8 +214,8 @@ where
     ///
     /// let mut k: Kurve<i32, i32> = Kurve::new();
     ///
-    /// k.add_node(1, 10);
-    /// k.add_node(2, 20);
+    /// k.add_vertex(1, 10);
+    /// k.add_vertex(2, 20);
     ///
     /// let removed = k.remove(1);
     /// assert!(removed.is_some());
@@ -259,7 +259,7 @@ where
     /// let mut k: Kurve<i32, i32> = Kurve::new();
     ///
     /// for i in 1..= 5 {
-    ///     k.add_node(i, i * 10);
+    ///     k.add_vertex(i, i * 10);
     /// }
     ///
     /// k.add_weighted_edge(1, 5, 1);
@@ -336,7 +336,7 @@ where
     /// let mut k: Kurve<i32, i32> = Kurve::new();
     /// assert_eq!(k.size(), 0);
     ///
-    /// k.add_node(0, 100);
+    /// k.add_vertex(0, 100);
     ///
     /// assert_eq!(k.size(), 1);
     /// ```
@@ -353,7 +353,7 @@ mod kurve_tests {
     #[test]
     fn adds_single_node() {
         let mut k: Kurve<String, i32> = Kurve::new();
-        k.add_node("node1".to_string(), 100);
+        k.add_vertex("node1".to_string(), 100);
 
         assert!(k.size() == 1);
     }
@@ -362,7 +362,7 @@ mod kurve_tests {
     fn adds_a_bunch_of_nodes() {
         let mut k: Kurve<i32, i32> = Kurve::new();
         for i in 1..=100 {
-            k.add_node(i, i as i32 * 20);
+            k.add_vertex(i, i as i32 * 20);
             assert!(k.adj_list.contains_key(&i));
         }
 
@@ -373,9 +373,9 @@ mod kurve_tests {
     fn adds_an_edge() {
         let mut k: Kurve<i32, i32> = Kurve::new();
 
-        k.add_node(0, 100);
-        k.add_node(1, 200);
-        k.add_node(2, 300);
+        k.add_vertex(0, 100);
+        k.add_vertex(1, 200);
+        k.add_vertex(2, 300);
 
         k.add_edge(0, 1);
         k.add_edge(0, 2);
@@ -395,9 +395,9 @@ mod kurve_tests {
     fn adds_a_weighted_edge() {
         let mut k: Kurve<i32, i32> = Kurve::new();
 
-        k.add_node(0, 100);
-        k.add_node(1, 200);
-        k.add_node(2, 300);
+        k.add_vertex(0, 100);
+        k.add_vertex(1, 200);
+        k.add_vertex(2, 300);
 
         k.add_weighted_edge(0, 1, 2);
         k.add_weighted_edge(0, 2, 3);
@@ -416,7 +416,7 @@ mod kurve_tests {
     #[test]
     fn gets_a_node() {
         let mut k: Kurve<i32, i32> = Kurve::new();
-        k.add_node(1, 1000);
+        k.add_vertex(1, 1000);
 
         let result = k.get(1);
         assert!(result.is_some());
@@ -431,7 +431,7 @@ mod kurve_tests {
     #[test]
     fn get_a_string_id_node() {
         let mut k: Kurve<String, i32> = Kurve::new();
-        k.add_node("node1".to_string(), 1000);
+        k.add_vertex("node1".to_string(), 1000);
 
         let result = k.get("node1".to_string());
         assert!(result.is_some());
@@ -447,9 +447,9 @@ mod kurve_tests {
     fn gets_neighbors_for_a_node() {
         let mut k: Kurve<i32, i32> = Kurve::new();
 
-        k.add_node(0, 100);
-        k.add_node(1, 200);
-        k.add_node(2, 300);
+        k.add_vertex(0, 100);
+        k.add_vertex(1, 200);
+        k.add_vertex(2, 300);
 
         k.add_edge(0, 1);
         k.add_edge(0, 2);
@@ -476,9 +476,9 @@ mod kurve_tests {
     fn gets_neighbors_for_a_node_weighted() {
         let mut k: Kurve<i32, i32> = Kurve::new();
 
-        k.add_node(0, 100);
-        k.add_node(1, 200);
-        k.add_node(2, 300);
+        k.add_vertex(0, 100);
+        k.add_vertex(1, 200);
+        k.add_vertex(2, 300);
 
         k.add_weighted_edge(0, 1, 2);
         k.add_weighted_edge(0, 2, 3);
@@ -511,9 +511,9 @@ mod kurve_tests {
     fn removes_a_node() {
         let mut k: Kurve<i32, i32> = Kurve::new();
 
-        k.add_node(0, 100);
-        k.add_node(1, 200);
-        k.add_node(2, 300);
+        k.add_vertex(0, 100);
+        k.add_vertex(1, 200);
+        k.add_vertex(2, 300);
 
         k.add_edge(0, 1);
         k.add_edge(0, 2);
@@ -546,7 +546,7 @@ mod kurve_tests {
         let mut k: Kurve<String, i32> = Kurve::new();
         let to_name = |i| format!("node{i}");
         for i in 1..=5 {
-            k.add_node(to_name(i), i * 100)
+            k.add_vertex(to_name(i), i * 100)
         }
 
 
@@ -569,7 +569,7 @@ mod kurve_tests {
         let mut k: Kurve<String, i32> = Kurve::new();
         let to_name = |i| format!("node{i}");
         for i in 1..=5 {
-            k.add_node(to_name(i), i * 100)
+            k.add_vertex(to_name(i), i * 100)
         }
 
 

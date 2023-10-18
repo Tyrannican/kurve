@@ -1,4 +1,7 @@
-mod queue;
+//! Kurve - A graphing lib!
+//! TODO: Fill this in
+
+mod queue; // <-- Document this too
 
 use queue::MinDistanceQueue;
 

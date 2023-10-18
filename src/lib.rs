@@ -5,18 +5,19 @@ use queue::MinDistanceQueue;
 use std::hash::Hash;
 use std::cmp::Ord;
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet, BinaryHeap};
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
-/// Vertex on the Graph
-type Node<K, T> = Rc<RefCell<Vertex<K, T>>>;
+/// Type alias for a vertex in the graph
+pub type Node<K, T> = Rc<RefCell<Vertex<K, T>>>;
 
-/// Edge with K key and usize weighting
-type Edge<K> = (K, usize);
-
+/// Vertex on the graph
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct Vertex<K, T> {
+    /// Vertex ID
     pub id: K,
+
+    /// Inner value
     pub value: T,
 }
 
@@ -24,13 +25,22 @@ impl<K, T> Vertex<K, T>
 where
     K: PartialEq + Eq + Hash + Clone + Ord
 {
+    /// Create a new Vertex
     pub fn new(id: K, value: T) -> Self {
         Self { id, value }
     }
 }
 
+/// Graph data structure
+///
+/// Allows for weighted and unweighted directional edges between nodes
+/// using an adjacency list.
 pub struct Kurve<K, T> {
+    /// Mapping of Vertex ID to actual Vertex contents
     nodes: HashMap<K, Node<K, T>>,
+
+    /// Mapping of Vertex ID to a map of neighboring Vertex
+    /// IDs and their associated weights
     adj_list: HashMap<K, HashMap<K, usize>>,
 }
 
@@ -39,6 +49,14 @@ where
     K: PartialEq + Eq + Hash + Clone + Ord
 {
     /// Creates a new Graph
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<String, i32> = Kurve::new();
+    /// ```
     pub fn new() -> Self {
         Self {
             nodes: HashMap::new(),
@@ -46,21 +64,38 @@ where
         }
     }
 
-    /// Gets the size of the Graph
-    pub fn size(&self) -> usize {
-        return self.nodes.len();
-    }
-
     /// Adds a node to the graph
-    /// Also creates an entry in the adjacency list
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<i32, i32> = Kurve::new();
+    ///
+    /// k.add_node(1, 1);
+    /// ```
     pub fn add_node(&mut self, id: K, value: T) {
         let node = Rc::new(RefCell::new(Vertex::new(id.clone(), value)));
         self.nodes.insert(id.clone(), Rc::clone(&node));
         self.adj_list.insert(id, HashMap::new());
     }
 
-    /// Adds an edge between one node TO another
-    /// This defaults the weighting for an edge to 1
+    /// Adds an edge between one node to another
+    ///
+    /// The weighting for each edge added this way is equal to 1 (unweighted)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<i32, i32> = Kurve::new();
+    /// k.add_node(1, 10);
+    /// k.add_node(2, 40);
+    ///
+    /// k.add_edge(1, 2);
+    /// ```
     pub fn add_edge(&mut self, from: K, to: K) {
         if let Some(inner) = self.adj_list.get_mut(&from) {
             inner.insert(to, 1);
@@ -68,6 +103,19 @@ where
     }
 
     /// Adds a weighted edge between one node to another
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<i32, i32> = Kurve::new();
+    ///
+    /// k.add_node(1, 10);
+    /// k.add_node(2, 40);
+    ///
+    /// k.add_weighted_edge(1, 2, 30);
+    /// ```
     pub fn add_weighted_edge(&mut self, from: K, to: K, weight: usize) {
         if let Some(inner) = self.adj_list.get_mut(&from) {
             inner.insert(to, weight);
@@ -75,6 +123,27 @@ where
     }
 
     /// Gets a node from the graph
+    ///
+    /// The returned node is an Rc of the inner Vertex
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<i32, i32> = Kurve::new();
+    ///
+    /// k.add_node(1, 100);
+    /// let node = k.get(1);
+    ///
+    /// assert!(node.is_some());
+    ///
+    /// let inner = node.unwrap();
+    /// let node_ref = inner.borrow();
+    ///
+    /// assert_eq!(node_ref.id, 1);
+    /// assert_eq!(node_ref.value, 100);
+    /// ```
     pub fn get(&self, id: K) -> Option<Node<K, T>> {
         if let Some(node) = self.nodes.get(&id) {
             return Some(Rc::clone(&node));
@@ -83,21 +152,79 @@ where
         return None;
     }
 
-    /// Gets the assocaited neighbors for a given node
-    pub fn get_neighbors(&self, node_id: K) -> Option<HashMap<K, usize>> {
-        if let Some(neighbors) = self.adj_list.get(&node_id) {
+    /// Gets the associated neighbors for a given vertex
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<i32, i32> = Kurve::new();
+    ///
+    /// k.add_node(1, 10);
+    /// k.add_node(2, 20);
+    /// k.add_node(3, 30);
+    ///
+    /// k.add_edge(1, 2);
+    /// k.add_edge(1, 3);
+    ///
+    /// let mut neighbors = k.get_neighbors(1);
+    /// assert!(neighbors.is_some());
+    ///
+    /// let inner = neighbors.unwrap();
+    /// assert!(inner.contains_key(&2));
+    /// assert!(inner.contains_key(&3));
+    /// ```
+    pub fn get_neighbors(&self, id: K) -> Option<HashMap<K, usize>> {
+        if let Some(neighbors) = self.adj_list.get(&id) {
             return Some(neighbors.clone());
         }
 
         return None;
     }
 
-    /// Gets a copy of the Adj list
+    /// Returns a copy of the adjacency list showing all neighbors for all vertices
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<i32, i32> = Kurve::new();
+    ///
+    /// k.add_node(1, 10);
+    /// k.add_node(2, 20);
+    ///
+    /// let neighbors = k.get_all_neighbors();
+    /// assert!(neighbors.contains_key(&1));
+    /// assert!(neighbors.contains_key(&2));
+    /// ```
     pub fn get_all_neighbors(&self) -> HashMap<K, HashMap<K, usize>> {
         return self.adj_list.clone();
     }
 
     /// Remove a node from the graph
+    ///
+    /// Also removes it from all connected neighbors
+    ///
+    /// # Exmaple
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<i32, i32> = Kurve::new();
+    ///
+    /// k.add_node(1, 10);
+    /// k.add_node(2, 20);
+    ///
+    /// let removed = k.remove(1);
+    /// assert!(removed.is_some());
+    /// assert!(!k.get_all_neighbors().contains_key(&1));
+    ///
+    /// let inner = removed.unwrap();
+    /// assert_eq!(inner.borrow().id, 1);
+    /// assert_eq!(inner.borrow().value, 10);
+    /// ```
     pub fn remove(&mut self, id: K) -> Option<Node<K, T>> {
         let node = self.nodes.remove(&id);
         match self.adj_list.remove(&id) {
@@ -119,7 +246,35 @@ where
         return node;
     }
 
-    /// Djikstra pathing algorithm 
+    /// Finds the shortest path between vertices using Dijkstra's Algorithm.
+    ///
+    /// Uses a Priority Queue (Min Binary Heap) to determine the shortest cost between vertices
+    /// during calculations
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<i32, i32> = Kurve::new();
+    ///
+    /// for i in 1..= 5 {
+    ///     k.add_node(i, i * 10);
+    /// }
+    ///
+    /// k.add_weighted_edge(1, 5, 1);
+    /// k.add_weighted_edge(1, 4, 6);
+    /// k.add_weighted_edge(1, 3, 4);
+    /// k.add_weighted_edge(1, 2, 7);
+    /// k.add_weighted_edge(5, 4, 1);
+    /// k.add_weighted_edge(4, 2, 3);
+    /// k.add_weighted_edge(3, 2, 2);
+    /// k.add_weighted_edge(3, 4, 5);
+    ///
+    /// let path = k.dijkstra(1, 2);
+    /// assert!(path.is_some());
+    /// assert_eq!(path, Some(vec![1, 5, 4, 2]));
+    /// ```
     pub fn dijkstra(&self, from: K, to: K) -> Option<Vec<K>> {
         let mut distances = HashMap::new();
         let mut predecessors = HashMap::new();
@@ -170,11 +325,30 @@ where
 
         return None;
     }
+
+    /// Returns the size of the Graph
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<i32, i32> = Kurve::new();
+    /// assert_eq!(k.size(), 0);
+    ///
+    /// k.add_node(0, 100);
+    ///
+    /// assert_eq!(k.size(), 1);
+    /// ```
+    pub fn size(&self) -> usize {
+        return self.nodes.len();
+    }
 }
 
 #[cfg(test)]
 mod kurve_tests {
     use super::*;
+    type Edge<K> = (K, usize);
 
     #[test]
     fn adds_single_node() {
@@ -391,7 +565,7 @@ mod kurve_tests {
     }
 
     #[test]
-    fn dijkstra_unweighted() {
+    fn djikstra_unweighted() {
         let mut k: Kurve<String, i32> = Kurve::new();
         let to_name = |i| format!("node{i}");
         for i in 1..=5 {

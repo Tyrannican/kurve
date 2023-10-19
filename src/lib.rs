@@ -486,6 +486,29 @@ mod kurve_tests {
     }
 
     #[test]
+    fn gets_a_mutable_vertex() {
+        let mut k: Kurve<i32, i32> = Kurve::new();
+        k.add_vertex(1, 1000);
+
+        let result = k.get_mut(1);
+        assert!(result.is_some());
+
+        let mut inner = result.unwrap();
+        assert!(inner.id == 1);
+        assert!(inner.value == 1000);
+
+        inner.value = 2;
+
+        drop(inner);
+
+        let updated_result = k.get(1);
+        assert!(updated_result.is_some());
+
+        let updated_inner = updated_result.unwrap();
+        assert!(updated_inner.value == 2);
+    }
+
+    #[test]
     fn get_a_string_id_vertex() {
         let mut k: Kurve<String, i32> = Kurve::new();
         k.add_vertex("vertex1".to_string(), 1000);

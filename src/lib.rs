@@ -1,7 +1,39 @@
-//! Kurve - A graphing lib!
-//! TODO: Fill this in
+//! A basic implementation of an adjacency list Graph data structure.
+//!
+//! The graph can have weighted edges using the `add_weighted_edge` between two vertices
+//! or unweighted using the `add_edge` between two vertices.
+//!
+//! The graph can be either directed or undirected depending on how you add edges between vertices.
+//!
+//! No bells, no whistles; just a simple graph to add / remove vertices and edges
+//! with a Dijkstra pathing algorithm.
+//! 
+//! # Example - Unweighted Graph
+//!
+//! ```rust
+//! use kurve::Kurve;
+//!
+//! // Create a graph with String IDs and i32 values
+//! let mut graph: Kurve<String, i32> = Kurve::new();
+//!
+//! // Add a few vertices
+//! graph.add_vertex("id_1".to_string(), 100);
+//! graph.add_vertex("id_2".to_string(), 200);
+//! graph.add_vertex("id_2".to_string(), 300);
+//!
+//! // Connect the edges with unweighted edges
+//! graph.add_edge("id_1".to_string(), "id_2".to_string());
+//! graph.add_edge("id_1".to_string(), "id_3".to_string());
+//! graph.add_edge("id_2".to_string(), "id_3".to_string());
+//!
+//! // Get a vertex from the graph
+//! let v = graph.get("id_2".to_string());
+//!
+//! // Remove a node from the graph
+//! graph.remove("id_3".to_string());
+//! ```
 
-mod queue; // <-- Document this too
+mod queue;
 
 use queue::MinDistanceQueue;
 

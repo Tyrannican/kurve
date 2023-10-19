@@ -1,7 +1,7 @@
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
-pub struct MinDistanceQueue<T> {
+pub(crate) struct MinDistanceQueue<T> {
     queue: BinaryHeap<Reverse<(usize, T)>>
 }
 

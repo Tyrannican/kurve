@@ -13,11 +13,6 @@ where
         return Self { queue: BinaryHeap::new() };
     }
 
-    pub fn peek(&self) -> Option<&T> {
-        let Reverse((_, item)) = self.queue.peek()?;
-        return Some(item);
-    }
-
     pub fn push(&mut self, item: T, priority: usize) {
         self.queue.push(Reverse((priority, item)));
     }
@@ -25,18 +20,6 @@ where
     pub fn pop(&mut self) -> Option<T> {
         let Reverse((_, item)) = self.queue.pop()?;
         return Some(item);
-    }
-
-    pub fn is_empty(&self) -> bool {
-        return self.queue.is_empty();
-    }
-
-    pub fn size(&self) -> usize {
-        return self.queue.len();
-    }
-
-    pub fn clear(&mut self) {
-        self.queue.clear();
     }
 }
 
@@ -47,7 +30,7 @@ mod min_distance_queue_tests {
     #[test]
     fn creates_an_empty_queue() {
         let q: MinDistanceQueue<i32> = MinDistanceQueue::new();
-        assert!(q.is_empty());
+        assert!(q.queue.is_empty());
     }
 
     #[test]
@@ -58,23 +41,7 @@ mod min_distance_queue_tests {
         q.push("node3".to_string(), 3);
         q.push("node4".to_string(), 4);
 
-        assert!(q.size() == 4);
-    }
-
-    #[test]
-    fn peeking_item() {
-        let mut q: MinDistanceQueue<String> = MinDistanceQueue::new();
-        assert!(q.peek().is_none());
-        q.push("node1".to_string(), 2);
-
-        let mut item = q.peek();
-        assert!(item.is_some());
-        assert!(item.unwrap() == "node1");
-
-        q.push("node2".to_string(), 1);
-        item = q.peek();
-        assert!(item.is_some());
-        assert!(item.unwrap() == "node2");
+        assert!(q.queue.len() == 4);
     }
 
     #[test]
@@ -105,8 +72,8 @@ mod min_distance_queue_tests {
             q.push(format!("node{i}"), i);
         }
 
-        assert!(q.size() == 100);
-        q.clear();
-        assert!(q.size() == 0);
+        assert!(q.queue.len() == 100);
+        q.queue.clear();
+        assert!(q.queue.len() == 0);
     }
 }

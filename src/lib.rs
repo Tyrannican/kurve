@@ -19,7 +19,7 @@
 //! // Add a few vertices
 //! graph.add_vertex("id_1".to_string(), 100);
 //! graph.add_vertex("id_2".to_string(), 200);
-//! graph.add_vertex("id_2".to_string(), 300);
+//! graph.add_vertex("id_3".to_string(), 300);
 //!
 //! // Connect the edges with unweighted edges
 //! graph.add_edge("id_1".to_string(), "id_2".to_string());
@@ -31,6 +31,33 @@
 //! 
 //! // Get a vertex from the graph
 //! let v = graph.get("id_2".to_string());
+//! ```
+//!
+//! # Example - Weighted Graph
+//!
+//! ```rust
+//! use kurve::Kurve;
+//!
+//! let mut graph: Kurve<String, i32> = Kurve::new();
+//!
+//! graph.add_vertex("id_1".to_string(), 100);
+//! graph.add_vertex("id_2".to_string(), 200);
+//! graph.add_vertex("id_3".to_string(), 300);
+//! graph.add_vertex("id_4".to_string(), 400);
+//!
+//! // Add weighted edges
+//! graph.add_weighted_edge("id_1".to_string(), "id_2".to_string(), 7);
+//! graph.add_weighted_edge("id_1".to_string(), "id_3".to_string(), 3);
+//! graph.add_weighted_edge("id_3".to_string(), "id_2".to_string(), 2);
+//! graph.add_weighted_edge("id_2".to_string(), "id_4".to_string(), 5);
+//!
+//! // Use Dijkstra to find the shortest path
+//! let path = graph.dijkstra("id_1".to_string(), "id_2".to_string());
+//! assert!(path.is_some());
+//! assert_eq!(
+//!     path,
+//!     Some(vec!["id_1".to_string(), "id_3".to_string(), "id_2".to_string()])
+//! );
 //! ```
 
 mod queue;
@@ -265,7 +292,7 @@ where
     ///
     /// Also removes it from all connected neighbors
     ///
-    /// # Exmaple
+    /// # Example 
     ///
     /// ```rust
     /// use kurve::Kurve;
@@ -280,10 +307,10 @@ where
     /// assert!(!k.get_all_neighbors().contains_key(&1));
     ///
     /// let inner = removed.unwrap();
-    /// assert_eq!(inner.borrow().id, 1);
-    /// assert_eq!(inner.borrow().value, 10);
+    /// assert_eq!(inner.id, 1);
+    /// assert_eq!(inner.value, 10);
     /// ```
-    pub fn remove(&mut self, id: K) -> Option<Node<K, T>> {
+    pub fn remove(&mut self, id: K) -> Option<Vertex<K, T>> {
         let vertex = self.vertices.remove(&id);
         match self.adj_list.remove(&id) {
             Some(neighbors) => {
@@ -300,8 +327,19 @@ where
             }
             None => {}
         }
+        
+        if let Some(vertex) = vertex {
+            match Rc::try_unwrap(vertex) {
+                Ok(refcell) => {
+                    return Some(refcell.into_inner());
+                },
+                Err(_) => {
+                    println!("unable to consume");
+                }
+            }
+        }
 
-        return vertex;
+        return None;
     }
 
     /// Finds the shortest path between vertices using Dijkstra's Algorithm.
@@ -603,10 +641,9 @@ mod kurve_tests {
         assert!(n.is_some());
         assert!(k.size() == 2);
 
-        let n = n.unwrap();
-        let vertex_ref = n.borrow();
-        assert!(vertex_ref.id == 0);
-        assert!(vertex_ref.value == 100);
+        let vtx = n.unwrap();
+        assert!(vtx.id == 0);
+        assert!(vtx.value == 100);
 
         let adj_list = k.get_all_neighbors();
         assert!(!adj_list.contains_key(&0));

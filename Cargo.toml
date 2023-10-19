@@ -9,7 +9,7 @@ readme = "README.md"
 documentation = "https://docs.rs/kurve"
 homepage = "https://github.com/Tyrannican/kurve"
 repository = "https://github.com/Tyrannican/kurve"
-keywords = ["graph", "data structure", "algorithm"]
+keywords = ["graph", "datastructure", "algorithm"]
 categories = ["data-structures"]
 
 [dependencies]

@@ -1,7 +1,15 @@
+//! Priority queue implemented using a Min Heap
+//!
+//! This is a helper data structure to make Dijkstra a bit more efficient.
+//! 
+//! Implemented as a Min Heap to allow for edges with the lowest weight to be
+//! the highest priority when calculating the path for the algoirithm.
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
+/// Priority Queue as a MinHeap
 pub(crate) struct MinDistanceQueue<T> {
+    /// Inner queue structure
     queue: BinaryHeap<Reverse<(usize, T)>>
 }
 
@@ -9,14 +17,17 @@ impl<T> MinDistanceQueue<T>
 where
     T: Ord + Clone
 {
+    /// Create a new Priority Queue
     pub fn new() -> Self {
         return Self { queue: BinaryHeap::new() };
     }
 
+    /// Add an item to the queue with the given priority
     pub fn push(&mut self, item: T, priority: usize) {
         self.queue.push(Reverse((priority, item)));
     }
 
+    /// Remove the item with the highest priority from the queue
     pub fn pop(&mut self) -> Option<T> {
         let Reverse((_, item)) = self.queue.pop()?;
         return Some(item);

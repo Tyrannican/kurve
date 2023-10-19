@@ -26,11 +26,11 @@
 //! graph.add_edge("id_1".to_string(), "id_3".to_string());
 //! graph.add_edge("id_2".to_string(), "id_3".to_string());
 //!
+//! // Remove a vertex from the graph
+//! graph.remove("id_3".to_string());
+//! 
 //! // Get a vertex from the graph
 //! let v = graph.get("id_2".to_string());
-//!
-//! // Remove a node from the graph
-//! graph.remove("id_3".to_string());
 //! ```
 
 mod queue;
@@ -39,7 +39,7 @@ use queue::MinDistanceQueue;
 
 use std::hash::Hash;
 use std::cmp::Ord;
-use std::cell::RefCell;
+use std::cell::{RefCell, Ref, RefMut};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
@@ -68,11 +68,11 @@ where
 
 /// Graph data structure
 ///
-/// Allows for weighted and unweighted directional edges between nodes
+/// Allows for weighted and unweighted directional edges between vertices
 /// using an adjacency list.
 pub struct Kurve<K, T> {
     /// Mapping of Vertex ID to actual Vertex contents
-    nodes: HashMap<K, Node<K, T>>,
+    vertices: HashMap<K, Node<K, T>>,
 
     /// Mapping of Vertex ID to a map of neighboring Vertex
     /// IDs and their associated weights
@@ -94,12 +94,12 @@ where
     /// ```
     pub fn new() -> Self {
         Self {
-            nodes: HashMap::new(),
+            vertices: HashMap::new(),
             adj_list: HashMap::new(),
         }
     }
 
-    /// Adds a node to the graph
+    /// Adds a vertex to the graph
     ///
     /// # Examples
     ///
@@ -111,12 +111,12 @@ where
     /// k.add_vertex(1, 1);
     /// ```
     pub fn add_vertex(&mut self, id: K, value: T) {
-        let node = Rc::new(RefCell::new(Vertex::new(id.clone(), value)));
-        self.nodes.insert(id.clone(), Rc::clone(&node));
+        let vertex = Rc::new(RefCell::new(Vertex::new(id.clone(), value)));
+        self.vertices.insert(id.clone(), Rc::clone(&vertex));
         self.adj_list.insert(id, HashMap::new());
     }
 
-    /// Adds an edge between one node to another
+    /// Adds an edge between one vertex to another
     ///
     /// The weighting for each edge added this way is equal to 1 (unweighted)
     ///
@@ -137,7 +137,7 @@ where
         }
     }
 
-    /// Adds a weighted edge between one node to another
+    /// Adds a weighted edge between one vertex to another
     ///
     /// # Examples
     ///
@@ -157,9 +157,7 @@ where
         }
     }
 
-    /// Gets a node from the graph
-    ///
-    /// The returned node is an Rc of the inner Vertex
+    /// Gets an immutable reference to a vertex on the graph
     ///
     /// # Examples
     ///
@@ -169,21 +167,46 @@ where
     /// let mut k: Kurve<i32, i32> = Kurve::new();
     ///
     /// k.add_vertex(1, 100);
-    /// let node = k.get(1);
+    /// let vertex = k.get(1);
     ///
-    /// assert!(node.is_some());
+    /// assert!(vertex.is_some());
     ///
-    /// let inner = node.unwrap();
-    /// let node_ref = inner.borrow();
+    /// let inner = vertex.unwrap();
     ///
-    /// assert_eq!(node_ref.id, 1);
-    /// assert_eq!(node_ref.value, 100);
+    /// assert_eq!(inner.id, 1);
+    /// assert_eq!(inner.value, 100);
     /// ```
-    pub fn get(&self, id: K) -> Option<Node<K, T>> {
-        if let Some(node) = self.nodes.get(&id) {
-            return Some(Rc::clone(&node));
+    pub fn get(&self, id: K) -> Option<Ref<'_, Vertex<K, T>>> {
+        if let Some(vertex) = self.vertices.get(&id) {
+            let vertex_ref = vertex.borrow();
+            return Some(vertex_ref);
         }
 
+        return None;
+    }
+
+    /// Gets a mutable reference to a vertex on the map
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use kurve::Kurve;
+    ///
+    /// let mut k: Kurve<i32, i32> = Kurve::new();
+    ///
+    /// k.add_vertex(1, 100);
+    ///
+    /// let vtx = k.get_mut(1);
+    /// assert!(vtx.is_some());
+    ///
+    /// let mut inner = vtx.unwrap();
+    /// inner.id = 2;
+    /// ```
+    pub fn get_mut(&mut self, id: K) -> Option<RefMut<'_, Vertex<K, T>>> {
+        if let Some(vertex) = self.vertices.get(&id) {
+            let vertex_ref = vertex.borrow_mut();
+            return Some(vertex_ref);
+        }
         return None;
     }
 
@@ -238,7 +261,7 @@ where
         return self.adj_list.clone();
     }
 
-    /// Remove a node from the graph
+    /// Remove a vertex from the graph
     ///
     /// Also removes it from all connected neighbors
     ///
@@ -261,7 +284,7 @@ where
     /// assert_eq!(inner.borrow().value, 10);
     /// ```
     pub fn remove(&mut self, id: K) -> Option<Node<K, T>> {
-        let node = self.nodes.remove(&id);
+        let vertex = self.vertices.remove(&id);
         match self.adj_list.remove(&id) {
             Some(neighbors) => {
                 for neighbor in neighbors.iter() {
@@ -278,7 +301,7 @@ where
             None => {}
         }
 
-        return node;
+        return vertex;
     }
 
     /// Finds the shortest path between vertices using Dijkstra's Algorithm.
@@ -325,8 +348,8 @@ where
 
         distances.insert(&from, 0);
 
-        while let Some(node) = queue.pop() {
-            if node == to {
+        while let Some(vertex) = queue.pop() {
+            if vertex == to {
                 let mut path = vec![to.clone()];
 
                 let mut curr = to.clone();
@@ -343,15 +366,15 @@ where
                 return Some(path);
             }
 
-            visited.insert(node.clone());
+            visited.insert(vertex.clone());
 
-            if let Some(edges) = self.adj_list.get(&node) {
+            if let Some(edges) = self.adj_list.get(&vertex) {
                 for (neighbor, weight) in edges {
-                    let new_dist = distances[&node] + *weight;
+                    let new_dist = distances[&vertex] + *weight;
 
                     if !visited.contains(neighbor) && new_dist < distances[neighbor] {
                         distances.insert(neighbor, new_dist);
-                        predecessors.insert(neighbor, Some(node.clone()));
+                        predecessors.insert(neighbor, Some(vertex.clone()));
                         queue.push(neighbor.clone(), new_dist);
                     }
                 }
@@ -376,7 +399,7 @@ where
     /// assert_eq!(k.size(), 1);
     /// ```
     pub fn size(&self) -> usize {
-        return self.nodes.len();
+        return self.vertices.len();
     }
 }
 
@@ -386,22 +409,22 @@ mod kurve_tests {
     type Edge<K> = (K, usize);
 
     #[test]
-    fn adds_single_node() {
+    fn adds_single_vertex() {
         let mut k: Kurve<String, i32> = Kurve::new();
-        k.add_vertex("node1".to_string(), 100);
+        k.add_vertex("vertex1".to_string(), 100);
 
         assert!(k.size() == 1);
     }
 
     #[test]
-    fn adds_a_bunch_of_nodes() {
+    fn adds_a_bunch_of_vertices() {
         let mut k: Kurve<i32, i32> = Kurve::new();
         for i in 1..=100 {
             k.add_vertex(i, i as i32 * 20);
             assert!(k.adj_list.contains_key(&i));
         }
 
-        assert!(k.nodes.len() == 100);
+        assert!(k.vertices.len() == 100);
     }
 
     #[test]
@@ -449,7 +472,7 @@ mod kurve_tests {
     }
 
     #[test]
-    fn gets_a_node() {
+    fn gets_a_vertex() {
         let mut k: Kurve<i32, i32> = Kurve::new();
         k.add_vertex(1, 1000);
 
@@ -457,29 +480,27 @@ mod kurve_tests {
         assert!(result.is_some());
 
         let inner = result.unwrap();
-        let node_ref = inner.borrow();
 
-        assert!(node_ref.id == 1);
-        assert!(node_ref.value == 1000);
+        assert!(inner.id == 1);
+        assert!(inner.value == 1000);
     }
 
     #[test]
-    fn get_a_string_id_node() {
+    fn get_a_string_id_vertex() {
         let mut k: Kurve<String, i32> = Kurve::new();
-        k.add_vertex("node1".to_string(), 1000);
+        k.add_vertex("vertex1".to_string(), 1000);
 
-        let result = k.get("node1".to_string());
+        let result = k.get("vertex1".to_string());
         assert!(result.is_some());
 
         let inner = result.unwrap();
-        let node_ref = inner.borrow();
 
-        assert!(node_ref.id == "node1".to_string());
-        assert!(node_ref.value == 1000);
+        assert!(inner.id == "vertex1".to_string());
+        assert!(inner.value == 1000);
     }
 
     #[test]
-    fn gets_neighbors_for_a_node() {
+    fn gets_neighbors_for_a_vertex() {
         let mut k: Kurve<i32, i32> = Kurve::new();
 
         k.add_vertex(0, 100);
@@ -508,7 +529,7 @@ mod kurve_tests {
     }
 
     #[test]
-    fn gets_neighbors_for_a_node_weighted() {
+    fn gets_neighbors_for_a_vertex_weighted() {
         let mut k: Kurve<i32, i32> = Kurve::new();
 
         k.add_vertex(0, 100);
@@ -543,7 +564,7 @@ mod kurve_tests {
     }
 
     #[test]
-    fn removes_a_node() {
+    fn removes_a_vertex() {
         let mut k: Kurve<i32, i32> = Kurve::new();
 
         k.add_vertex(0, 100);
@@ -560,9 +581,9 @@ mod kurve_tests {
         assert!(k.size() == 2);
 
         let n = n.unwrap();
-        let node_ref = n.borrow();
-        assert!(node_ref.id == 0);
-        assert!(node_ref.value == 100);
+        let vertex_ref = n.borrow();
+        assert!(vertex_ref.id == 0);
+        assert!(vertex_ref.value == 100);
 
         let adj_list = k.get_all_neighbors();
         assert!(!adj_list.contains_key(&0));
@@ -579,7 +600,7 @@ mod kurve_tests {
     #[test]
     fn dijkstra_weighted() {
         let mut k: Kurve<String, i32> = Kurve::new();
-        let to_name = |i| format!("node{i}");
+        let to_name = |i| format!("vertex{i}");
         for i in 1..=5 {
             k.add_vertex(to_name(i), i * 100)
         }
@@ -602,7 +623,7 @@ mod kurve_tests {
     #[test]
     fn djikstra_unweighted() {
         let mut k: Kurve<String, i32> = Kurve::new();
-        let to_name = |i| format!("node{i}");
+        let to_name = |i| format!("vertex{i}");
         for i in 1..=5 {
             k.add_vertex(to_name(i), i * 100)
         }

@@ -70,9 +70,6 @@ use std::cell::{RefCell, Ref, RefMut};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
-/// Type alias for a vertex in the graph
-pub type Node<K, T> = Rc<RefCell<Vertex<K, T>>>;
-
 /// Vertex on the graph
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct Vertex<K, T> {
@@ -99,7 +96,7 @@ where
 /// using an adjacency list.
 pub struct Kurve<K, T> {
     /// Mapping of Vertex ID to actual Vertex contents
-    vertices: HashMap<K, Node<K, T>>,
+    vertices: HashMap<K, Rc<RefCell<Vertex<K, T>>>>,
 
     /// Mapping of Vertex ID to a map of neighboring Vertex
     /// IDs and their associated weights
